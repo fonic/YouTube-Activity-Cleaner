@@ -9,7 +9,7 @@
 // @updateURL   https://github.com/fonic/YouTube-Activity-Cleaner/raw/main/YouTube%20Activity%20Cleaner%20%28YAC%29.user.js
 // @namespace   myactivity.google.com
 // @match       https://myactivity.google.com/*
-// @version     1.4
+// @version     1.5
 // @grant       none
 // @run-at      context-menu
 // ==/UserScript==
@@ -185,9 +185,15 @@ async function initiateItemDeletion() {
     }
 
     // Scroll to bottom of page (repeatedly if necessary, until ALL items are
-    // loaded and listed)
+    // loaded and listed; NOTE: abort scrolling when 'Unable to load more.'
+    // appears, as user reports indicate that this might occur when there are
+    // LOTS of comments (>1.000) and loading at some point simply halts with
+    // this message; clicking the 'Retry' button, which could easily be auto-
+    // mated, does not seem to have any effect in this scenario, thus aborting
+    // seems to be the only appropriate course of action; see GitHub issues #3
+    // and #1 for details)
     console.log('[YAC] Scrolling to bottom of page to load/list all items...');
-    while (!document.evaluate('//div[contains(text(), "Looks like you\'ve reached the end")] | //p[contains(text(), "No activity.")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue) {
+    while (!document.evaluate('//div[contains(text(), "Looks like you\'ve reached the end")] | //p[contains(text(), "No activity.")] | //div[contains(text(), "Unable to load more.")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue) {
         window.scrollTo(0, document.body.scrollHeight);
         await sleep(1000);
     }
