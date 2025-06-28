@@ -9,7 +9,7 @@
 // @updateURL   https://github.com/fonic/YouTube-Activity-Cleaner/raw/main/YouTube%20Activity%20Cleaner%20%28YAC%29.user.js
 // @namespace   myactivity.google.com
 // @match       https://myactivity.google.com/*
-// @version     1.5
+// @version     1.6
 // @grant       none
 // @run-at      context-menu
 // ==/UserScript==
@@ -166,11 +166,12 @@ async function deleteItems(deleteBatchSize) {
         button.style.backgroundColor = '';
         await sleep(1000);
 
-        // Click delete button, pause to allow deletion to finish (NOTE:
-        // disable the following line for testing!)
+        // Click delete button, pause to allow deletion to finish (NOTE: dis-
+        // able the following line for dry-run testing; results may vary based
+        // on delay below, deletion will likely fail if set too low)
         button.click();
         count++;
-        await sleep(1500);
+        await sleep(2000);
     }
 
     // Return number of remaining items
