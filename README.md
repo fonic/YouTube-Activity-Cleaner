@@ -8,9 +8,8 @@ published by [cprima](https://gist.github.com/cprima).
 
 ## Donations
 
-I'm striving to become a full-time developer of [Free and open-source software
-(FOSS)](https://en.wikipedia.org/wiki/Free_and_open-source_software). Donations
-help me achieve that goal and are highly appreciated.
+I'm a strong supporter of [Free and open-source software (FOSS)](https://en.wikipedia.org/wiki/Free_and_open-source_software).
+Donations help keeping my projects alive and are highly appreciated.
 
 <a href="https://www.buymeacoffee.com/fonic"><img src="https://raw.githubusercontent.com/fonic/donate-buttons/main/buymeacoffee-button.png" alt="Buy Me A Coffee" height="35"></a>&nbsp;&nbsp;
 <a href="https://paypal.me/fonicmaxxim"><img src="https://raw.githubusercontent.com/fonic/donate-buttons/main/paypal-button.png" alt="Donate via PayPal" height="35"></a>&nbsp;&nbsp;
