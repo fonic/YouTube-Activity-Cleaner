@@ -9,7 +9,7 @@
 // @updateURL   https://github.com/fonic/YouTube-Activity-Cleaner/raw/main/YouTube%20Activity%20Cleaner%20%28YAC%29.user.js
 // @namespace   myactivity.google.com
 // @match       https://myactivity.google.com/*
-// @version     1.6
+// @version     1.9
 // @grant       none
 // @run-at      context-menu
 // ==/UserScript==
@@ -141,6 +141,95 @@ function determineBestSelector() {
     return SELECTORS[0];
 }
 
+//function waitForDivTextBox(text, timeout) {
+function waitForDivTextBox(sel, text, timeout) {
+    return new Promise((resolve, reject) => {
+
+        // Function to find <div>-based text box containing text within DOM
+        const findDivTextBox = () => {
+            //return [...document.querySelectorAll("div")].find(div => div.textContent.includes(text));
+            //return [...document.querySelectorAll("div")].find(div => div.textContent == text);
+            return [...document.querySelectorAll(sel)].find(div => div.textContent == text);
+        };
+
+        // Forward declaration of timer to avoid potential reference issue
+        // within observer callback
+        let timer = null;
+
+        // Create mutation observer to observe changes in DOM tree to detect
+        // spawning of text box (NOTE: this is only triggered by DOM CHANGES,
+        // thus an additional check is required in case the text box ALREADY
+        // EXISTS at this point in time -> see block below)
+        const observer = new MutationObserver(() => {
+            const found = findDivTextBox();
+            if (found) {
+                observer.disconnect();
+                clearTimeout(timer);
+                resolve(found);
+            }
+        });
+
+        // Start observer
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            //characterData: true
+        });
+
+        // Check DOM tree for text box NOW in case it already spawned BEFORE
+        // observer was created (placing this check BEFORE creating the ob-
+        // server would likely open a window for potential race conditions)
+        const found2 = findDivTextBox();
+        if (found2) {
+            observer.disconnect();
+            resolve(found2);
+            return;
+        }
+
+        // Set and handle timeout (prevents waiting forever in case nothing
+        // happens)
+        timer = setTimeout(() => {
+            observer.disconnect();
+            reject();
+        }, timeout);
+    });
+}
+
+function waitForElementRemoval(element, timeout) {
+    return new Promise((resolve, reject) => {
+
+        // Forward declaration of timer for observer callback
+        let timer = null;
+
+        // Create observer
+        const observer = new MutationObserver(() => {
+            if (!document.body.contains(element)) {
+                observer.disconnect();
+                clearTimeout(timer);
+                resolve();
+            }
+        });
+
+        // Start observer
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+
+        // Perform immediate check
+        if (!document.body.contains(element)) {
+            observer.disconnect();
+            resolve();
+        }
+
+        // Set timeout timer
+        timer = setTimeout(() => {
+            observer.disconnect();
+            reject();
+        }, timeout);
+    });
+}
+
 async function deleteItems(deleteBatchSize) {
     // Compile list of available delete buttons (reversed order for delete
     // BatchSize < 0; NOTE: '[...doc]' -> destructuring/unpack assignment)
@@ -159,19 +248,44 @@ async function deleteItems(deleteBatchSize) {
         button.scrollIntoView({ behavior: 'smooth', block: 'center' });
         await sleep(1000);
 
-        // Highlight delete button (light red), pause to allow highlight
-        // to be visible, clear highlight, pause again
+        // Highlight delete button (light red), pause to allow highlight to be
+        // visible, clear highlight, pause again to allow change to be visible
         button.style.backgroundColor = '#ffcccc';
         await sleep(1000);
         button.style.backgroundColor = '';
         await sleep(1000);
 
-        // Click delete button, pause to allow deletion to finish (NOTE: dis-
-        // able the following line for dry-run testing; results may vary based
-        // on delay below, deletion will likely fail if set too low)
+        // Click delete button and pause to allow deletion to finish (NOTE:
+        // disable button click for dry-run testing; results may vary based on
+        // delay below, deletion will very likely fail if set too low; approach
+        // is sufficient but certainly not optimal)
+        //button.click();
+        //await sleep(2000);
+        //count++;
+
+        // Click delete button and wait for deletion to actually finish (NOTE:
+        // dry-run testing NOT supported with this approach, use block above for
+        // that instead; this took a LONG time to get right, refer to archived
+        // versions with additional debug output in case debugging should become
+        // necessary again)
         button.click();
+        let textbox = null;
+        //await waitForDivTextBox('item deleted', 5000)
+        //await waitForDivTextBox('1 item deleted', 5000)
+        await waitForDivTextBox('.Mh0NNb.Mp2Z0b.misTTe', '1 item deleted', 5000)
+            .then(result => {
+                textbox = result;
+            })
+            .catch(() => {
+                console.log('[YAC] Timeout while waiting for delete confirmation to appear.');
+            });
+        if (textbox) {
+            await waitForElementRemoval(textbox, 5000)
+                .catch(() => {
+                    console.log('[YAC] Timeout while waiting for delete confirmation to disappear.');
+                });
+        }
         count++;
-        await sleep(2000);
     }
 
     // Return number of remaining items
