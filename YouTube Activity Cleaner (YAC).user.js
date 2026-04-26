@@ -9,37 +9,10 @@
 // @updateURL   https://github.com/fonic/YouTube-Activity-Cleaner/raw/main/YouTube%20Activity%20Cleaner%20%28YAC%29.user.js
 // @namespace   myactivity.google.com
 // @match       https://myactivity.google.com/*
-// @version     1.9
+// @version     2.0
 // @grant       none
 // @run-at      context-menu
 // ==/UserScript==
-
-/**
- * Based on: https://gist.github.com/cprima/2f7ea8e353c18a666506021c85e9773d
- * Original author's notes:
- *
- * Google MyActivity YouTube Comment Deletion Script
- *
- * Script to assist in bulk deletion of YouTube comments from Google's MyActivity.
- *
- * Usage:
- * - Navigate to MyActivity YouTube Comments page.
- * - Open browser's developer console.
- * - Copy-paste this script, and follow on-screen prompts.
- *
- * Features:
- * - Deletes comments from bottom (oldest first).
- * - User control: specify number to delete, or cancel anytime.
- *
- * Safety:
- * - Halting: 'cancel' during prompt or close tab.
- *
- * Author: Christian Prior-Mamulyan
- * License: MIT
- * Source: https://gist.github.com/cprima/2f7ea8e353c18a666506021c85e9773d
- *
- * Use cautiously. Deletion is irreversible.
- */
 
 function checkIfPageIsSupported() {
     // List of supported pages (NOTE: make sure to add suitable '@match'
@@ -146,6 +119,7 @@ function waitForDivTextBox(sel, text, timeout) {
     return new Promise((resolve, reject) => {
 
         // Function to find <div>-based text box containing text within DOM
+        // tree
         const findDivTextBox = () => {
             //return [...document.querySelectorAll("div")].find(div => div.textContent.includes(text));
             //return [...document.querySelectorAll("div")].find(div => div.textContent == text);
@@ -195,6 +169,7 @@ function waitForDivTextBox(sel, text, timeout) {
     });
 }
 
+// Based on waitForDivTextBox() above
 function waitForElementRemoval(element, timeout) {
     return new Promise((resolve, reject) => {
 
@@ -251,23 +226,25 @@ async function deleteItems(deleteBatchSize) {
         // Highlight delete button (light red), pause to allow highlight to be
         // visible, clear highlight, pause again to allow change to be visible
         button.style.backgroundColor = '#ffcccc';
-        await sleep(1000);
+        await sleep(750);
         button.style.backgroundColor = '';
-        await sleep(1000);
+        await sleep(750);
 
         // Click delete button and pause to allow deletion to finish (NOTE:
         // disable button click for dry-run testing; results may vary based on
         // delay below, deletion will very likely fail if set too low; approach
-        // is sufficient but certainly not optimal)
+        // is sufficient but certainly not optimal, see code block below for an
+        // improved solution)
         //button.click();
         //await sleep(2000);
         //count++;
 
-        // Click delete button and wait for deletion to actually finish (NOTE:
-        // dry-run testing NOT supported with this approach, use block above for
-        // that instead; this took a LONG time to get right, refer to archived
-        // versions with additional debug output in case debugging should become
-        // necessary again)
+        // Click delete button and wait for deletion to actually finish by ob-
+        // serving the deletion confirmation pop-up message in the bottem left
+        // corner (NOTE: dry-run testing is NOT supported for this approach,
+        // use code block above for that instead; this took a LONG time to get
+        // right, refer to archived versions with additional debug output in
+        // case debugging should become necessary again in the future)
         button.click();
         let textbox = null;
         //await waitForDivTextBox('item deleted', 5000)
